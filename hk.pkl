@@ -1,0 +1,67 @@
+amends "package://github.com/jdx/hk/releases/download/v1.36.0/hk@1.36.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.36.0/hk@1.36.0#/Builtins.pkl"
+
+env {
+  ["NODE_ENV"] = "development"
+}
+
+default_branch = "main"
+fail_fast = true
+
+exclude =
+  List(
+    ".next",
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".claude",
+  )
+
+local precommit = new Mapping<String, Step> {
+  ["check-merge-conflict"] = Builtins.check_merge_conflict
+  ["detect-private-key"] = Builtins.detect_private_key
+  ["check-added-large-files"] = Builtins.check_added_large_files
+
+  ["biome"] = (Builtins.biome) {
+    prefix = "pnpm -s exec"
+  }
+
+  ["trailing-whitespace"] = Builtins.trailing_whitespace
+}
+
+local prepush = new Mapping<String, Step> {
+  ["biome:ci"] {
+    check = "pnpm -s biome:ci"
+    stomp = true
+  }
+
+  ["typecheck"] = (Builtins.tsc) {
+    prefix = "pnpm -s exec"
+    glob = "**/*"
+    stomp = true
+  }
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = true
+    stash = "git"
+    steps = precommit
+  }
+
+  ["pre-push"] {
+    fix = false
+    steps = prepush
+  }
+
+  ["check"] {
+    steps = prepush
+  }
+
+  ["fix"] {
+    fix = true
+    stash = "git"
+    steps = precommit
+  }
+}
