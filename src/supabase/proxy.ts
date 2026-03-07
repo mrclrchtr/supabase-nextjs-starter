@@ -17,7 +17,7 @@ export async function updateSession(request: NextRequest) {
 	// variable. Always create a new one on each request.
 	const supabase = createServerClient(
 		environment.NEXT_PUBLIC_SUPABASE_URL,
-		environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+		environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY,
 		{
 			cookies: {
 				getAll() {

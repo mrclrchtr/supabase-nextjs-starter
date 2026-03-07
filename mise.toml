@@ -1,0 +1,12 @@
+[tools]
+node = "24.14.0"
+pnpm = "10.13.0"
+hk = "1.36.0"
+pkl = "0.30.2"
+
+[hooks]
+postinstall = 'npx corepack enable'
+
+[settings]
+experimental = true
+lockfile = true

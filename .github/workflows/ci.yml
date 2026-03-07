@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      app_e2e: ${{ steps.filter.outputs.app_e2e }}
+      migrations: ${{ steps.filter.outputs.migrations }}
+      supabase_local: ${{ steps.filter.outputs.supabase_local }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Detect changed file categories
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            app_e2e:
+              - 'src/**'
+              - 'e2e/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'playwright.config.ts'
+              - 'next.config.ts'
+              - 'proxy.ts'
+            migrations:
+              - 'supabase/migrations/**'
+            supabase_local:
+              - 'supabase/config.toml'
+              - 'supabase/seed.sql'
+
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up workspace dependencies
+        uses: ./.github/actions/setup-pnpm
+
+      - name: Biome
+        run: pnpm biome:ci
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Knip (deps)
+        run: pnpm knip
+
+      - name: Unit tests
+        run: pnpm test:ci
+
+      - name: Build
+        run: pnpm build
+
+  integration:
+    needs:
+      - changes
+      - checks
+    if: ${{ needs.changes.outputs.app_e2e == 'true' || needs.changes.outputs.migrations == 'true' || needs.changes.outputs.supabase_local == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up workspace dependencies
+        uses: ./.github/actions/setup-pnpm
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@b60b5899c73b63a2d2d651b1e90db8d4c9392f51 # v1.6.0
+        with:
+          version: 2.75.0
+
+      - name: Install Playwright browser dependencies
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Reset local Supabase database
+        run: supabase db reset --local --yes
+
+      - name: Export local Supabase environment
+        run: supabase status -o env >> "$GITHUB_ENV"
+
+      - name: Run Playwright smoke tests
+        run: pnpm test:e2e:ci
+
+  deploy_db:
+    needs:
+      - changes
+      - checks
+      - integration
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.migrations == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    concurrency:
+      group: production-db-deploy
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@b60b5899c73b63a2d2d651b1e90db8d4c9392f51 # v1.6.0
+        with:
+          version: 2.75.0
+
+      - name: Deploy Supabase migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD" --yes
+          supabase db push --password "$SUPABASE_DB_PASSWORD" --yes

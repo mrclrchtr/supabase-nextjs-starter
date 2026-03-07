@@ -1,0 +1,40 @@
+# For detailed configuration reference documentation, visit:
+# https://supabase.com/docs/guides/local-development/cli/config
+
+project_id = "supabase-nextjs-starter"
+
+[api]
+enabled = true
+
+[db]
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.network_restrictions]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+
+[inbucket]
+enabled = false
+
+[storage]
+enabled = false
+
+[auth]
+enabled = true
+
+[auth.email]
+enable_signup = true
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
