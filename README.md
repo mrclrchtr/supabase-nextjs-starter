@@ -73,6 +73,8 @@ mise install
 pnpm install
 ```
 
+`mise install` sets up the pinned local toolchain, including the Supabase CLI used by the local workflow.
+
 If you want the local git hooks as well:
 
 ```bash
@@ -117,8 +119,9 @@ Preferred setup:
 - [mise](https://mise.jdx.dev/)
 - Node.js
 - pnpm
+- Supabase CLI
 
-If you do not use mise, install compatible versions of Node.js and pnpm manually.
+If you do not use mise, install compatible versions of Node.js, pnpm, and the Supabase CLI manually. Local setup uses `supabase start`, `supabase db reset --local`, and `supabase status -o env`. CI currently pins Supabase CLI `2.75.0` for consistency.
 
 ## Environment variables and auth redirects
 
@@ -267,7 +270,7 @@ src/
   app/          Next.js routes, layouts, route handlers, metadata, and route-local private folders
   components/   Shared composed UI and design-system primitives
   features/     Feature slices such as auth and notes
-  hooks/        Client hooks that have not been migrated yet
+  hooks/        Shared client hooks when the app needs them
   lib/          Infrastructure helpers such as env and Supabase runtime setup
   mocks/        MSW handlers for tests
   providers/    App-wide React providers
