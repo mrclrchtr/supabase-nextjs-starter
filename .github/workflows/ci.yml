@@ -96,9 +96,6 @@ jobs:
       - name: Start local Supabase stack
         run: supabase start
 
-      - name: Reset local Supabase database
-        run: supabase db reset --local --yes
-
       - name: Export local Supabase environment
         run: supabase status -o env >> "$GITHUB_ENV"
 

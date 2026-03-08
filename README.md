@@ -18,11 +18,11 @@
 </p>
 
 <p align="center">
-  A production-ready starter for building apps with Next.js 16 and Supabase.
+  A production-leaning starter for building apps with Next.js 16 and Supabase.
 </p>
 
 <p align="center">
-  It includes SSR-friendly Supabase auth, protected routes, Tailwind 4, shadcn-style UI primitives, TanStack Query, Vitest, Biome, pinned local tooling with mise, and CI workflows for app checks and Supabase migrations.
+  It includes SSR-friendly Supabase auth, protected routes, Tailwind 4, shadcn-style UI primitives, TanStack Query, Vitest, Biome, pinned local tooling with mise, and CI coverage for app checks, local Supabase integration, and tracked migrations.
 </p>
 
 <div align="center">
@@ -81,18 +81,26 @@ hk install --mise
 
 ### 3. Configure environment variables
 
-Copy `.env.example` to `.env.local` and set your Supabase values:
+Copy `.env.example` to `.env.local` and point it at either your local Supabase stack or a hosted project:
 
 ```bash
 cp .env.example .env.local
 ```
 
+For local development, start Supabase, apply the tracked migration, seed the starter notes table, and copy the generated values:
+
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE KEY]
+supabase start
+supabase db reset --local
+supabase status -o env
 ```
 
-You can find both values in your Supabase project settings under API.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=[INSERT SUPABASE API PUBLISHABLE KEY]
+```
+
+For hosted projects, use the values from your Supabase project settings under API.
 
 ### 4. Start the app
 
@@ -117,24 +125,25 @@ If you do not use mise, install compatible versions of Node.js and pnpm manually
 This starter currently requires these public Supabase variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
 
-For first setup, `src/utils/env.ts` includes a temporary fallback so the app can render setup guidance before the env vars are configured. Treat that as onboarding convenience, not as the long-term production pattern.
+`src/lib/env.ts` keeps the landing page usable when both values are missing so the app can show setup guidance. Once either value is configured, the helper requires the full pair so partial setup fails fast.
 
 If you use the built-in auth flows, configure these redirect URLs in the Supabase dashboard:
 
-- `/protected` for email sign-up confirmation
+- `/auth/confirm?next=/protected` for email sign-up confirmation
 - `/auth/update-password` for password reset
 
 Relevant implementation:
 
-- `src/components/sign-up-form.tsx`
-- `src/components/forgot-password-form.tsx`
-- `src/components/update-password-form.tsx`
+- `src/app/(auth)/auth/confirm/route.ts`
+- `src/features/auth/components/sign-up-form.tsx`
+- `src/features/auth/components/forgot-password-form.tsx`
+- `src/features/auth/components/update-password-form.tsx`
 
 ## Supabase SSR auth and Next.js Proxy
 
-Starting with Next.js 16, Middleware is now called **Proxy**. This repository uses `proxy.ts` together with `src/supabase/proxy.ts` to keep Supabase sessions in sync for SSR routes.
+Starting with Next.js 16, Middleware is now called **Proxy**. This repository uses `proxy.ts` together with `src/lib/supabase/proxy.ts` to keep Supabase sessions in sync for SSR routes.
 
 Why this exists:
 
@@ -147,9 +156,9 @@ This keeps the browser session and server-rendered session aligned and helps pro
 Relevant files:
 
 - `proxy.ts`
-- `src/supabase/proxy.ts`
-- `src/supabase/server.ts`
-- `src/app/protected/page.tsx`
+- `src/lib/supabase/proxy.ts`
+- `src/lib/supabase/server.ts`
+- `src/app/(protected)/protected/page.tsx`
 
 ## Built-in flows
 
@@ -161,8 +170,9 @@ This starter already includes:
 - update password
 - auth confirmation route
 - a protected page that requires an authenticated user
+- a seeded `notes` table used by the protected server-rendered and client-rendered examples
 
-Auth pages live under `src/app/auth`, and the protected example lives at `src/app/protected/page.tsx`.
+Auth pages live under the `(auth)` route group at `src/app/(auth)/auth`, and the protected example lives under the `(protected)` route group at `src/app/(protected)/protected/page.tsx`.
 
 ## Tooling workflow
 
@@ -194,10 +204,203 @@ hk install --mise
 - `pnpm test` — Start Vitest in watch mode
 - `pnpm test:ci` — Run Vitest once for CI or local verification
 - `pnpm test:ui` — Start the Vitest UI
+- `pnpm test:e2e` — Run the Playwright end-to-end suite locally
+- `pnpm test:e2e:ci` — Run the Playwright suite with the CI reporter
 - `pnpm knip` — Check for unused dependencies
 - `pnpm check` — Run the main local quality gate (`biome:ci`, `typecheck`, `knip`, `test:ci`)
 - `pnpm check:fix` — Apply Biome fixes, then run the full quality gate
 - `pnpm analyze` — Build the project with bundle analysis enabled
+
+## CI
+
+GitHub Actions runs the following jobs on pushes and pull requests to `main`:
+
+- `changes` — classifies file changes to decide whether local Supabase and Playwright need to run
+- `checks` — runs `pnpm biome:ci`, `pnpm typecheck`, `pnpm knip`, `pnpm test:ci`, and `pnpm build`
+- `integration` — conditionally starts the local Supabase stack and runs `pnpm test:e2e:ci`
+- `deploy_db` — on pushes to `main`, conditionally links to Supabase and runs `supabase db push` when tracked migrations change
+
+The CI workflow uses:
+
+- `mise` to install the pinned toolchain
+- explicit pnpm store caching via the shared setup action
+- `pnpm install --frozen-lockfile` for reproducible installs
+- `supabase start` and `supabase status -o env` for local integration coverage
+
+Relevant workflow:
+
+- `.github/workflows/ci.yml`
+
+## Supabase migrations and DB push
+
+Tracked migrations live under:
+
+```text
+supabase/migrations/
+```
+
+The starter ships with an initial `notes` migration plus seeded local data. The `deploy_db` job inside `.github/workflows/ci.yml` runs automatically on pushes to `main` after the rest of CI passes whenever tracked migrations change.
+
+To use that job, configure these GitHub repository secrets:
+
+- `SUPABASE_ACCESS_TOKEN`
+- `SUPABASE_DB_PASSWORD`
+- `SUPABASE_PROJECT_REF`
+
+The job uses the Supabase CLI to:
+
+1. link to the target project
+2. run `supabase db push`
+
+To reset your local database to the tracked schema and starter data, run:
+
+```bash
+supabase db reset --local
+```
+
+## Project structure
+
+Current top-level layout:
+
+```text
+src/
+  app/          Next.js routes, layouts, route handlers, metadata, and route-local private folders
+  components/   Shared composed UI and design-system primitives
+  features/     Feature slices such as auth and notes
+  hooks/        Client hooks that have not been migrated yet
+  lib/          Infrastructure helpers such as env and Supabase runtime setup
+  mocks/        MSW handlers for tests
+  providers/    App-wide React providers
+  test/         Test utilities
+  utils/        Generic helpers still being narrowed over time
+supabase/
+  config.toml   Local Supabase stack configuration
+  migrations/   Tracked database schema changes
+  seed.sql      Local seed data
+e2e/
+  smoke.spec.ts Playwright smoke test
+```
+
+This starter uses these boundaries to stay scalable as the app grows:
+
+```text
+src/
+  app/                Route ownership: pages, layouts, route handlers, metadata, route-local code
+  features/<feature>/ Domain/product code owned by a feature slice
+  components/ui/      Design-system primitives only
+  components/shared/  Cross-feature composed UI only
+  lib/                Infrastructure and domain-agnostic helpers
+  providers/          App-wide React providers
+```
+
+### Structure contract
+
+#### `src/app` owns routes
+
+Use `src/app` for:
+- route segments
+- `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`
+- `route.ts`
+- metadata files like `favicon.ico`, `opengraph-image.png`, and `twitter-image.png`
+- route-local private folders such as `_components` and `_lib` when code belongs to one route subtree only
+
+Keep business logic out of route files when it has a stable home elsewhere. Pages, layouts, and route handlers should mostly orchestrate feature modules, navigation, and HTTP concerns.
+
+#### `src/features/<feature>` owns domain code
+
+Use feature folders for product/domain slices that may be used by multiple routes or entrypoints.
+
+Good examples for this starter:
+- `features/auth`
+- `features/notes`
+
+A feature can contain only the folders it actually needs, such as:
+- `components/`
+- `hooks/`
+- `server/`
+- `types/`
+
+Do not create empty scaffolding just to match the pattern.
+
+#### `src/components/ui` owns primitives
+
+Keep generic design-system primitives here:
+- buttons
+- inputs
+- cards
+- labels
+- dropdowns
+
+No product semantics should live in this folder.
+
+#### `src/components/shared` stays narrow
+
+Use shared components only for cross-feature composed UI, such as:
+- navigation
+- shared app chrome
+- generic feedback/presentational components reused across multiple features
+
+Do not use `components/shared` as a catch-all for:
+- route-only sections
+- tutorial blocks tied to one route area
+- domain-specific UI like auth forms or notes lists
+
+If a component belongs to one route subtree, prefer route-local `_components`. If it belongs to one domain, prefer `features/<feature>/components`.
+
+#### `src/lib` owns infrastructure, not feature queries
+
+The target long-term home for infrastructure code is `src/lib`.
+
+Good fits:
+- Supabase runtime wiring
+- env access
+- generic helpers
+- framework/platform integration
+
+Bad fits:
+- table/domain queries
+- feature-specific data loading
+- auth forms and domain UI
+
+Important rule:
+- `lib/supabase` should contain runtime and session infrastructure only
+- feature-specific queries should live under `features/<feature>/server`
+
+#### `src/providers` owns app-wide provider setup
+
+Keep app-wide React providers here and compose them from the root layout.
+
+Current examples:
+- `src/providers/react-query-provider.tsx`
+- `src/providers/theme-provider.tsx`
+
+#### Starter/demo content is not the same as shared product code
+
+This repository is both an app and a starter. Tutorial/setup/demo content should not silently turn into shared app architecture.
+
+Use these rules:
+- if starter content belongs only to the landing area, keep it route-local
+- if it is a deliberate reusable teaching slice, document why it exists
+- do not move starter-only content into `components/shared` just because it is reused once or twice
+
+### Dependency direction
+
+Use these rules when placing code:
+- `app` may depend on `features`, `components/shared`, `components/ui`, `lib`, and `providers`
+- feature server modules may depend on `lib`, but should not depend on feature UI
+- `lib` must not depend on `features` or `app`
+- domain types should not be owned by UI component files
+- protected-route-only orchestration should prefer route-local `_lib` / `_components` over broad shared buckets
+
+One concrete example from the current repo: the notes feature should own its data types and data-access code rather than keeping them in global `components`, `hooks`, or `utils` buckets.
+
+### Current structure guidance
+
+The repository now demonstrates the core boundaries directly in the tree:
+1. landing-only starter/demo UI lives in route-local private folders under `src/app`
+2. protected-route-only orchestration lives in route-local `_lib` / `_components`
+3. `components/shared` stays narrow while `components/ui` holds primitives
+4. feature slices such as auth and notes own their domain-specific code
 
 ## Git hooks
 
@@ -212,66 +415,6 @@ Useful commands:
 hk install --mise
 hk run check
 hk run fix
-```
-
-## CI
-
-GitHub Actions runs the following checks on pushes and pull requests to `main`:
-
-- `pnpm biome:ci`
-- `pnpm typecheck`
-- `pnpm knip`
-- `pnpm test:ci`
-- `pnpm build`
-
-The CI workflow uses:
-
-- `mise` to install the pinned toolchain
-- explicit pnpm store caching via `actions/cache`
-- `pnpm install --frozen-lockfile` for reproducible installs
-
-Relevant workflow:
-
-- `.github/workflows/ci.yml`
-
-## Supabase migrations and DB push
-
-This repository tracks migrations under:
-
-```text
-supabase/migrations/
-```
-
-A dedicated GitHub Actions workflow, `Supabase DB Push`, runs automatically on pushes to `main` when files in `supabase/migrations/**` change. You can also trigger it manually with `workflow_dispatch`.
-
-To use that workflow, configure these GitHub repository secrets:
-
-- `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD`
-- `SUPABASE_PROJECT_REF`
-
-The workflow uses the Supabase CLI to:
-
-1. link to the target project
-2. run `supabase db push`
-
-Relevant workflow:
-
-- `.github/workflows/supabase-db-push.yml`
-
-## Project structure
-
-```text
-src/
-  app/          Next.js routes and layouts
-  components/   UI components and auth forms
-  hooks/        Client hooks
-  mocks/        MSW handlers for tests
-  providers/    App-wide providers
-  supabase/     Client, server, and Proxy helpers
-  test/         Test utilities
-supabase/
-  migrations/   Tracked Supabase migrations
 ```
 
 ## Paths
