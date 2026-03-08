@@ -1,0 +1,40 @@
+{
+	"version": 1,
+	"skills": {
+		"next-best-practices": {
+			"source": "vercel-labs/next-skills",
+			"sourceType": "github",
+			"computedHash": "515ba75178bd44875812d9a560bdf14651f86709f89cf1d4f209638e879807f3"
+		},
+		"next-cache-components": {
+			"source": "vercel-labs/next-skills",
+			"sourceType": "github",
+			"computedHash": "a94b83ddcd2ff1c30722577f693b1bfe32f2e1a83abdd6c08c2d6cc6753b53c8"
+		},
+		"next-upgrade": {
+			"source": "vercel-labs/next-skills",
+			"sourceType": "github",
+			"computedHash": "be6bbf6ab1dc2cc6f2505cea52d497920c04f5b532c0846ee201f6029b803fb0"
+		},
+		"shadcn": {
+			"source": "shadcn/ui",
+			"sourceType": "github",
+			"computedHash": "91c02eb706f046fb9d6a061efbb96496e4be751b5b14c283cf82baaa50f3a985"
+		},
+		"supabase-postgres-best-practices": {
+			"source": "supabase/agent-skills",
+			"sourceType": "github",
+			"computedHash": "9c87c315aed143ee3b34bec8117100f5035e0df09e6b23e1ecc772cff434c9ad"
+		},
+		"vercel-composition-patterns": {
+			"source": "vercel-labs/agent-skills",
+			"sourceType": "github",
+			"computedHash": "f98931159fa9c7fed043bcd18a891a46dcf89ababa38df13a4c5b7b30dc0ce07"
+		},
+		"vercel-react-best-practices": {
+			"source": "vercel-labs/agent-skills",
+			"sourceType": "github",
+			"computedHash": "3462ec83f862abb2d532953df33a4dbf87f4616849da5d4b5cc7c13601aaf997"
+		}
+	}
+}

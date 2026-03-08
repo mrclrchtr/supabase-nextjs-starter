@@ -16,6 +16,7 @@ exclude =
     "build",
     "coverage",
     ".claude",
+    ".agents"
   )
 
 local precommit = new Mapping<String, Step> {
@@ -46,7 +47,6 @@ local prepush = new Mapping<String, Step> {
 hooks {
   ["pre-commit"] {
     fix = true
-    stash = "git"
     steps = precommit
   }
 
