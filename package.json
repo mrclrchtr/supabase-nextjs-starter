@@ -65,7 +65,7 @@
 		"@vitejs/plugin-react": "4.7.0",
 		"@vitest/ui": "4.0.18",
 		"axios": "^1.13.1",
-		"jsdom": "^26.1.0",
+		"jsdom": "^28.0.0",
 		"knip": "^5.64.1",
 		"msw": "^2.12.10",
 		"postcss": "8.5.8",
