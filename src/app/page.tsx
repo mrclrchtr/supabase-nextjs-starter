@@ -1,5 +1,5 @@
-import { Hero } from "@/app/_components/hero";
 import { ConnectSupabaseSteps } from "@/app/_components/tutorial/connect-supabase-steps";
+import { Hero } from "@/app/_components/tutorial/hero";
 import { SignUpUserSteps } from "@/app/_components/tutorial/sign-up-user-steps";
 import { AppShell } from "@/components/shared/app-shell";
 import { hasEnvVars } from "@/lib/env";

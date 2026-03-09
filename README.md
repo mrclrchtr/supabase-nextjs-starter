@@ -177,6 +177,37 @@ This starter already includes:
 
 Auth pages live under the `(auth)` route group at `src/app/(auth)/auth`, and the protected example lives under the `(protected)` route group at `src/app/(protected)/protected/page.tsx`.
 
+## Remove starter/demo content
+
+Use cleanup in layers so you can replace the starter without guessing what is safe to delete.
+
+### Minimal cleanup
+
+If you only want to remove the landing-page tutorial and keep the built-in auth/protected examples:
+
+- replace `src/app/page.tsx` with your real homepage
+- delete `src/app/_components/tutorial/` if you do not want the onboarding UI, hero, or landing-page starter branding
+- keep `src/lib/env.ts` if you still want the homepage to tolerate missing Supabase env vars during setup
+- update `e2e/smoke.spec.ts` if you want the homepage test to assert different boot behavior
+
+### Deeper cleanup
+
+If you also do not want the example auth/protected flows:
+
+- remove the `(auth)` routes under `src/app/(auth)/auth`
+- remove the protected example under `src/app/(protected)/protected`
+- remove feature code that only supports those examples, such as `src/features/auth` and `src/features/notes`, once nothing imports it
+- remove the related tests after you remove those routes and features
+
+### What is starter surface vs core infrastructure?
+
+Start here when deciding what to keep:
+
+- `src/app/page.tsx` is the landing-page composition point for starter content
+- `src/app/_components/tutorial/` contains the landing-page onboarding UI
+- `(auth)` and `(protected)` are optional example flows, not required app structure
+- `src/lib/env.ts`, `src/lib/supabase/*`, `proxy.ts`, and shared providers/components are core infrastructure you can keep even after replacing the starter content
+
 ## Tooling workflow
 
 This repository uses:
