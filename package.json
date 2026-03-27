@@ -63,7 +63,7 @@
 		"@types/react-dom": "19.2.3",
 		"@playwright/test": "1.58.2",
 		"@vitejs/plugin-react": "5.2.0",
-		"@vitest/ui": "4.1.0",
+		"@vitest/ui": "4.1.1",
 		"axios": "1.13.6",
 		"jsdom": "28.1.0",
 		"knip": "5.88.1",
@@ -71,7 +71,7 @@
 		"postcss": "8.5.8",
 		"tailwindcss": "4.2.2",
 		"typescript": "5.9.3",
-		"vitest": "4.1.0"
+		"vitest": "4.1.1"
 	},
 	"packageManager": "pnpm@10.32.1"
 }
