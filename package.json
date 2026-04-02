@@ -33,7 +33,7 @@
 		"analyze": "ANALYZE=true pnpm build"
 	},
 	"dependencies": {
-		"@supabase/ssr": "^0.9.0",
+		"@supabase/ssr": "^0.10.0",
 		"@supabase/supabase-js": "^2.89.0",
 		"@tanstack/react-query": "^5.90.12",
 		"@tanstack/react-query-devtools": "^5.91.1",
