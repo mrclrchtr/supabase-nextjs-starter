@@ -67,7 +67,7 @@
 		"axios": "1.15.0",
 		"jsdom": "28.1.0",
 		"knip": "5.88.1",
-		"msw": "2.13.1",
+		"msw": "2.13.2",
 		"postcss": "8.5.9",
 		"tailwindcss": "4.2.2",
 		"typescript": "5.9.3",
