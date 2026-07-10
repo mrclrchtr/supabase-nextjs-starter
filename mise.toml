@@ -2,7 +2,7 @@
 node = "24.15.0"
 pnpm = "10.33.0"
 hk = "1.50.0"
-pkl = "0.31.1"
+pkl = "0.32.0"
 
 [hooks]
 postinstall = 'npx corepack enable'
