@@ -62,7 +62,7 @@
 		"@types/react": "19.2.17",
 		"@types/react-dom": "19.2.3",
 		"@playwright/test": "1.61.1",
-		"@vitejs/plugin-react": "5.2.0",
+		"@vitejs/plugin-react": "6.0.3",
 		"@vitest/ui": "4.1.10",
 		"axios": "1.18.1",
 		"jsdom": "28.1.0",
