@@ -64,7 +64,7 @@
 		"@playwright/test": "1.62.0",
 		"@vitejs/plugin-react": "5.2.0",
 		"@vitest/ui": "4.1.10",
-		"axios": "1.18.1",
+		"axios": "1.19.0",
 		"jsdom": "28.1.0",
 		"knip": "5.88.1",
 		"msw": "2.15.0",
