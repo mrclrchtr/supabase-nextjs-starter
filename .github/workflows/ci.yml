@@ -88,7 +88,7 @@ jobs:
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
         with:
-          version: 2.75.0
+          version: 2.118.0
 
       - name: Install Playwright browser dependencies
         run: pnpm exec playwright install --with-deps chromium
@@ -121,7 +121,7 @@ jobs:
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
         with:
-          version: 2.75.0
+          version: 2.118.0
 
       - name: Deploy Supabase migrations
         env:
